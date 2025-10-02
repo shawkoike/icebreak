@@ -457,19 +457,23 @@
       currentWordEl.textContent = 'お疲れ様でした！';
     }
 
-    wordInput.addEventListener('input', (e) => {
-      if (!gameActive) return;
-      
-      const input = e.target.value;
-      
-      if (input === currentWord) {
-        clearHurdle();
-      }
-    });
 
     wordInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !gameActive && !startBtn.disabled) {
-        startGame();
+      if (e.key === 'Enter') {
+        if (!gameActive && !startBtn.disabled) {
+          // Start game if not active
+          startGame();
+        } else if (gameActive) {
+          // Check answer and clear input
+          const input = wordInput.value;
+          
+          if (input === currentWord) {
+            clearHurdle();
+          } else {
+            // Clear input even if wrong
+            wordInput.value = '';
+          }
+        }
       }
     });
   </script>
