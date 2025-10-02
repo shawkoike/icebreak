@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ハードル走タイピングゲーム</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      padding: 2rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .title {
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ff4444 0%, #ff8844 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #888;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      flex: 1;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ff4444;
+    }
+
+    .game-area {
+      position: relative;
+      background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+      border: 3px solid #ff4444;
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      margin-bottom: 2rem;
+      min-height: 300px;
+      overflow: hidden;
+    }
+
+    .track-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+    }
+
+    .track-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .runner {
+      position: absolute;
+      left: 10%;
+      bottom: 80px;
+      font-size: 3rem;
+      transition: transform 0.3s ease;
+      z-index: 10;
+    }
+
+    .runner.jumping {
+      animation: jump 0.6s ease;
+    }
+
+    @keyframes jump {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      30% { transform: translateY(-60px) rotate(-10deg); }
+      50% { transform: translateY(-80px) rotate(0deg); }
+      70% { transform: translateY(-60px) rotate(10deg); }
+    }
+
+    .hurdle {
+      position: absolute;
+      right: 10%;
+      bottom: 70px;
+      font-size: 3rem;
+      transition: all 0.6s ease;
+      z-index: 5;
+    }
+
+    .hurdle.cleared {
+      animation: hurdleFall 0.6s ease forwards;
+    }
+
+    @keyframes hurdleFall {
+      0% { transform: rotate(0deg); opacity: 1; }
+      100% { transform: rotate(90deg) translateX(50px); opacity: 0; }
+    }
+
+    .word-display {
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 15;
+    }
+
+    .current-word {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+    }
+
+    .input-area {
+      text-align: center;
+      position: relative;
+      z-index: 15;
+    }
+
+    .word-input {
+      width: 100%;
+      max-width: 500px;
+      padding: 1.5rem;
+      font-size: 1.5rem;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.5);
+      border: 3px solid #ff4444;
+      border-radius: 12px;
+      color: #ffffff;
+      outline: none;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .word-input:focus {
+      border-color: #ff8844;
+      box-shadow: 0 0 30px rgba(255, 68, 68, 0.3);
+    }
+
+    .word-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .controls {
+      text-align: center;
+    }
+
+    .btn {
+      padding: 1.25rem 3rem;
+      font-size: 1.25rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #ff4444 0%, #ff8844 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(255, 68, 68, 0.6);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .game-over {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+      background: rgba(255, 68, 68, 0.1);
+      border: 2px solid #ff4444;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+    }
+
+    .game-over.show {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .game-over-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ff4444;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+    }
+
+    .final-score {
+      font-size: 4rem;
+      font-weight: 900;
+      color: #ffffff;
+      margin: 1rem 0;
+    }
+
+    .message {
+      font-size: 1.25rem;
+      color: #888;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .title {
+        font-size: 2rem;
+      }
+
+      .stat-value {
+        font-size: 1.75rem;
+      }
+
+      .current-word {
+        font-size: 2rem;
+      }
+
+      .word-input {
+        font-size: 1.25rem;
+      }
+
+      .runner, .hurdle {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">Hurdle Race</h1>
+      <p class="subtitle">Typing Game</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-label">Time</div>
+        <div class="stat-value" id="timer">30</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Score</div>
+        <div class="stat-value" id="score">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Cleared</div>
+        <div class="stat-value" id="cleared">0</div>
+      </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+      <div class="game-over-title">Game Over!</div>
+      <div class="final-score" id="finalScore">0</div>
+      <div class="message">ハードルクリア数: <span id="finalCleared">0</span></div>
+    </div>
+
+    <div class="game-area" id="gameArea">
+      <div class="track-lines">
+        <div class="track-line" style="top: 25%"></div>
+        <div class="track-line" style="top: 50%"></div>
+        <div class="track-line" style="top: 75%"></div>
+      </div>
+      
+      <div class="runner" id="runner">🏃</div>
+      <div class="hurdle" id="hurdle">🚧</div>
+
+      <div class="word-display">
+        <div class="current-word" id="currentWord">スタートを押してください</div>
+      </div>
+
+      <div class="input-area">
+        <input 
+          type="text" 
+          class="word-input" 
+          id="wordInput" 
+          placeholder="ここに入力..."
+          disabled
+          autocomplete="off"
+        >
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="startBtn" onclick="startGame()">スタート</button>
+    </div>
+  </div>
+
+  <script>
+    const words = [
+      'ぜんしん','ほじょきん','しょうきぼ','ものづくり','しんじぎょう','いず','ゆうらくちょう','くえすと','ちゃれんじ',
+      'しくみ','すーぱーえーあい','じむきょく','みくせす','すらっく','めたらいふ','たこす','こみっと','えいぎょう','さぽちーむ',
+      'ぷろだくと','まーけ','しゃんぱんふぁいと'
+    ];
+
+    let gameActive = false;
+    let timeLeft = 30;
+    let score = 0;
+    let clearedCount = 0;
+    let currentWord = '';
+    let timerInterval;
+
+    const timerEl = document.getElementById('timer');
+    const scoreEl = document.getElementById('score');
+    const clearedEl = document.getElementById('cleared');
+    const currentWordEl = document.getElementById('currentWord');
+    const wordInput = document.getElementById('wordInput');
+    const startBtn = document.getElementById('startBtn');
+    const gameOverEl = document.getElementById('gameOver');
+    const finalScoreEl = document.getElementById('finalScore');
+    const finalClearedEl = document.getElementById('finalCleared');
+    const runner = document.getElementById('runner');
+    const hurdle = document.getElementById('hurdle');
+
+    function startGame() {
+      gameActive = true;
+      timeLeft = 30;
+      score = 0;
+      clearedCount = 0;
+      
+      timerEl.textContent = timeLeft;
+      scoreEl.textContent = score;
+      clearedEl.textContent = clearedCount;
+      
+      wordInput.disabled = false;
+      wordInput.value = '';
+      wordInput.focus();
+      
+      startBtn.disabled = true;
+      gameOverEl.classList.remove('show');
+      
+      nextWord();
+      
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function nextWord() {
+      currentWord = words[Math.floor(Math.random() * words.length)];
+      currentWordEl.textContent = currentWord;
+      wordInput.value = '';
+      
+      // Reset hurdle position
+      hurdle.classList.remove('cleared');
+      hurdle.style.opacity = '1';
+      hurdle.style.transform = 'none';
+    }
+
+    function clearHurdle() {
+      // Runner jumps
+      runner.classList.add('jumping');
+      setTimeout(() => {
+        runner.classList.remove('jumping');
+      }, 600);
+      
+      // Hurdle falls
+      hurdle.classList.add('cleared');
+      
+      const wordLength = currentWord.length;
+      const points = wordLength * 10;
+      score += points;
+      clearedCount++;
+      
+      scoreEl.textContent = score;
+      clearedEl.textContent = clearedCount;
+      
+      setTimeout(() => {
+        if (gameActive) {
+          nextWord();
+        }
+      }, 700);
+    }
+
+    function endGame() {
+      gameActive = false;
+      clearInterval(timerInterval);
+      
+      wordInput.disabled = true;
+      startBtn.disabled = false;
+      
+      finalScoreEl.textContent = score;
+      finalClearedEl.textContent = clearedCount;
+      gameOverEl.classList.add('show');
+      
+      currentWordEl.textContent = 'お疲れ様でした！';
+    }
+
+    wordInput.addEventListener('input', (e) => {
+      if (!gameActive) return;
+      
+      const input = e.target.value;
+      
+      if (input === currentWord) {
+        clearHurdle();
+      }
+    });
+
+    wordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !gameActive && !startBtn.disabled) {
+        startGame();
+      }
+    });
+  </script>
+</body>
+</html>
