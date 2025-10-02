@@ -365,6 +365,7 @@
     let clearedCount = 0;
     let currentWord = '';
     let timerInterval;
+    let isProcessing = false;
 
     const timerEl = document.getElementById('timer');
     const scoreEl = document.getElementById('score');
@@ -383,6 +384,7 @@
       timeLeft = 30;
       score = 0;
       clearedCount = 0;
+      isProcessing = false;
       
       timerEl.textContent = timeLeft;
       scoreEl.textContent = score;
@@ -411,6 +413,7 @@
       currentWord = words[Math.floor(Math.random() * words.length)];
       currentWordEl.textContent = currentWord;
       wordInput.value = '';
+      isProcessing = false;
       
       // Reset hurdle position
       hurdle.classList.remove('cleared');
@@ -460,18 +463,25 @@
 
     wordInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
+        e.preventDefault();
+        
         if (!gameActive && !startBtn.disabled) {
-          // Start game if not active
           startGame();
-        } else if (gameActive) {
-          // Check answer and clear input
-          const input = wordInput.value;
+        } else if (gameActive && !isProcessing) {
+          const input = wordInput.value.trim();
+          
+          wordInput.value = '';
+          
+          if (input === '') {
+            return;
+          }
+          
+          isProcessing = true;
           
           if (input === currentWord) {
             clearHurdle();
           } else {
-            // Clear input even if wrong
-            wordInput.value = '';
+            isProcessing = false;
           }
         }
       }
